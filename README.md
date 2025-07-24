@@ -2,6 +2,8 @@
 
 A visual training tool designed to improve peripheral vision, reaction time, and quick decision-making skills for soccer players.
 
+**🚀 Live URL**: https://tim-basic.github.io/Quick-Scan-Soccer-App/soccer-training.html
+
 ## What It Does
 
 This application displays random numbers (0-20) and occasional images on a colored background that changes every few seconds. Players must quickly identify and call out what they see while performing other training activities.
