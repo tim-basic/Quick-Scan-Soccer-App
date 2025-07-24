@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soccer Training - Quick Look</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+            transition: background-color 0.5s ease;
+            position: relative;
+        }
+
+        .display {
+            text-align: center;
+            font-size: 20rem;
+            text-shadow: 5px 5px 10px rgba(0,0,0,0.7);
+            line-height: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #settings-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #settings-btn:hover {
+         
+            background:  rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 80px;
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            min-width: 300px;
+            backdrop-filter: blur(10px);
+        }
+
+        .controls.show {
+            display: block;
+        }
+
+        .setting-group {
+            margin-bottom: 24px;
+        }
+
+        .setting-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .input-group input {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 80px;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+            margin-bottom: 0;
+        }
+
+        .radio-group input[type="radio"] {
+            margin-right: 8px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            border-color: #40a9ff;
+            color: #40a9ff;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+            color: white;
+        }
+
+        .display {
+            overflow: hidden;
+            max-height: 100vh;
+            max-width: 100vw;
+        }
+
+        .easter-egg-image {
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <button id="settings-btn" onclick="toggleControls()">⚙️</button>
+    
+    <div class="controls" id="controls">
+        <div class="setting-group">
+            <label>Change Interval (seconds):</label>
+            <div class="input-group">
+                <input type="number" id="interval-input" value="5" min="1" max="30">
+                <button onclick="updateInterval()" class="btn btn-primary">Update</button>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <label>Display Mode:</label>
+            <div class="radio-group">
+                <label><input type="radio" name="display-mode" value="mixed" checked onchange="updateDisplayMode(this.value)"> Mixed (Numbers + Images)</label>
+                <label><input type="radio" name="display-mode" value="numbers" onchange="updateDisplayMode(this.value)"> Numbers Only</label>
+                <label><input type="radio" name="display-mode" value="images" onchange="updateDisplayMode(this.value)"> Images Only</label>
+            </div>
+        </div>
+        
+        <div class="setting-group">
+            <label>Font Size:</label>
+            <div class="button-group">
+                <button onclick="decreaseFontSize()" class="btn">A-</button>
+                <button onclick="increaseFontSize()" class="btn">A+</button>
+            </div>
+        </div>
+        
+        <button onclick="toggleControls()" class="btn close-btn">Close</button>
+    </div>
+
+    <div class="display" id="number">5</div>
+
+    <script>
+        const colorSchemes = [
+            { color: 'Blue', textColor: 'white', allowedImages: ['toilet.png', 'chad.png', 'npc.png'] },
+            { color: 'Green', textColor: 'white', allowedImages: ['toilet.png', 'chad.png', 'npc.png'] },
+            { color: 'Red', textColor: 'white', allowedImages: ['toilet.png', 'chad.png', 'npc.png'] },
+            { color: 'HotPink', textColor: 'white', allowedImages: ['toilet.png', 'chad.png', 'npc.png'] },
+            { color: 'Orange', textColor: 'white', allowedImages: ['toilet.png', 'chad.png', 'npc.png'] },
+            { color: 'Purple', textColor: 'white', allowedImages: ['toilet.png', 'chad.png', 'npc.png'] },
+            { color: 'Yellow', textColor: 'black', allowedImages: ['toilet.png', 'chad.png', 'npc.png'] }
+        ];
+
+
+        let currentInterval = 5000; // 5 seconds
+        let intervalId;
+        let currentFontSize = 20; // Current font size in rem
+        let currentImageSize = 90; // Current image size in vh
+        let displayMode = 'mixed'; // 'numbers', 'images', 'mixed'
+
+        function getRandomNumber() {
+            return Math.floor(Math.random() * 21); // 0-20
+        }
+
+        function shouldShowEasterEgg() {
+            return Math.random() < 0.08; // 8% chance
+        }
+
+        function getRandomAllowedImage(colorScheme) {
+            const allowedImages = colorScheme.allowedImages;
+            if (allowedImages.length === 0) return null;
+            return allowedImages[Math.floor(Math.random() * allowedImages.length)];
+        }
+
+        function getRandomColorIndex() {
+            return Math.floor(Math.random() * colorSchemes.length);
+        }
+
+        function updateDisplay() {
+            const colorIndex = getRandomColorIndex();
+            const colorScheme = colorSchemes[colorIndex];
+            
+            document.body.style.backgroundColor = colorScheme.color;
+            document.body.style.color = colorScheme.textColor;
+            
+            const displayElement = document.getElementById('number');
+            
+            if (displayMode === 'numbers') {
+                displayElement.textContent = getRandomNumber();
+            } else if (displayMode === 'images') {
+                const image = getRandomAllowedImage(colorScheme);
+                if (image) {
+                    displayElement.innerHTML = `<img src="img/${image}" alt="Easter egg" class="easter-egg-image" style="max-width: ${currentImageSize}vh; max-height: ${currentImageSize}vh;">`;
+                } else {
+                    displayElement.textContent = getRandomNumber();
+                }
+            } else { // mixed mode
+                if (shouldShowEasterEgg()) {
+                    const image = getRandomAllowedImage(colorScheme);
+                    if (image) {
+                        displayElement.innerHTML = `<img src="img/${image}" alt="Easter egg" class="easter-egg-image" style="max-width: ${currentImageSize}vh; max-height: ${currentImageSize}vh;">`;
+                    } else {
+                        displayElement.textContent = getRandomNumber();
+                    }
+                } else {
+                    displayElement.textContent = getRandomNumber();
+                }
+            }
+        }
+
+        function startInterval() {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+            intervalId = setInterval(updateDisplay, currentInterval);
+        }
+
+        function updateInterval() {
+            const newInterval = parseInt(document.getElementById('interval-input').value) * 1000;
+            if (newInterval >= 1000 && newInterval <= 30000) {
+                currentInterval = newInterval;
+                startInterval();
+                alert('Interval updated to ' + (currentInterval/1000) + ' seconds');
+            } else {
+                alert('Please enter a value between 1 and 30 seconds');
+            }
+        }
+
+        function toggleControls() {
+            const controls = document.getElementById('controls');
+            controls.classList.toggle('show');
+        }
+
+        function updateDisplayMode(mode) {
+            displayMode = mode;
+        }
+
+        function increaseFontSize() {
+            // Constrain font size to prevent overflow - roughly 80vh max
+            const maxFontSize = Math.min(60, window.innerHeight * 0.8 / 16);
+            if (currentFontSize < maxFontSize) {
+                currentFontSize += 2;
+                document.getElementById('number').style.fontSize = currentFontSize + 'rem';
+            }
+            if (currentImageSize < 100) {
+                currentImageSize += 5;
+                const imageElement = document.querySelector('.easter-egg-image');
+                if (imageElement) {
+                    imageElement.style.maxWidth = currentImageSize + 'vh';
+                    imageElement.style.maxHeight = currentImageSize + 'vh';
+                }
+            }
+        }
+
+        function decreaseFontSize() {
+            if (currentFontSize > 10) {
+                currentFontSize -= 2;
+                document.getElementById('number').style.fontSize = currentFontSize + 'rem';
+            }
+            if (currentImageSize > 30) {
+                currentImageSize -= 5;
+                const imageElement = document.querySelector('.easter-egg-image');
+                if (imageElement) {
+                    imageElement.style.maxWidth = currentImageSize + 'vh';
+                    imageElement.style.maxHeight = currentImageSize + 'vh';
+                }
+            }
+        }
+
+        // Initialize the app
+        updateDisplay();
+        startInterval();
+
+        // Handle visibility change to pause/resume when tab is not active
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                clearInterval(intervalId);
+            } else {
+                startInterval();
+            }
+        });
+
+        // Close popup when clicking outside
+        document.addEventListener('click', function(event) {
+            const controls = document.getElementById('controls');
+            const settingsBtn = document.getElementById('settings-btn');
+            if (!controls.contains(event.target) && !settingsBtn.contains(event.target)) {
+                controls.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
